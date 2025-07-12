@@ -1,11 +1,11 @@
 import { Component, Input, signal } from '@angular/core';
-import { Register } from "../account/register/register";
+import { Register } from '../account/register/register';
 
 @Component({
   selector: 'app-home',
   imports: [Register],
   templateUrl: './home.html',
-  styleUrl: './home.css'
+  styleUrl: './home.css',
 })
 export class Home {
   protected registerMode = signal(false);
