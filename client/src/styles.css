@@ -1,4 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: all
+    themes: all;
+    /* for filter modal to prevent shifting layout: */
+    exclude: rootscrollgutter; 
 }
