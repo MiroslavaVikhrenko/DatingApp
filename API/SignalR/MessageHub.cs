@@ -8,8 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace API.SignalR;
 
 [Authorize]
-public class MessageHub(IMessageRepository messageRepository, IMemberRepository memberRepository,
-    IHubContext<PresenceHub> presenceHub) : Hub
+public class MessageHub(IUnitOfWork uow, IHubContext<PresenceHub> presenceHub) : Hub
 {
     public override async Task OnConnectedAsync()
     {
@@ -23,7 +22,7 @@ public class MessageHub(IMessageRepository messageRepository, IMemberRepository 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
         await AddToGroup(groupName); // save to db
 
-        var messages = await messageRepository.GetMessageThread(GetUserId(), otherUser);
+        var messages = await uow.MessageRepository.GetMessageThread(GetUserId(), otherUser);
 
         // notify to the users inside this group and pass back the message thread
         await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
@@ -31,8 +30,8 @@ public class MessageHub(IMessageRepository messageRepository, IMemberRepository 
 
     public async Task SendMessage(CreateMessageDto createMessageDto)
     {
-        var sender = await memberRepository.GetMemberByIdAsync(GetUserId());
-        var recipient = await memberRepository.GetMemberByIdAsync(createMessageDto.RecipientId);
+        var sender = await uow.MemberRepository.GetMemberByIdAsync(GetUserId());
+        var recipient = await uow.MemberRepository.GetMemberByIdAsync(createMessageDto.RecipientId);
 
         if (recipient == null || sender == null || sender.Id == createMessageDto.RecipientId)
             throw new HubException("Cannot send message");
@@ -45,7 +44,7 @@ public class MessageHub(IMessageRepository messageRepository, IMemberRepository 
         };
 
         var groupName = GetGroupName(sender.Id, recipient.Id);
-        var group = await messageRepository.GetMessageGroup(groupName);
+        var group = await uow.MessageRepository.GetMessageGroup(groupName);
         var userInGroup = group != null && group.Connections.Any(x => x.UserId == message.RecipientId);
 
         if (userInGroup)
@@ -54,9 +53,9 @@ public class MessageHub(IMessageRepository messageRepository, IMemberRepository 
             message.DateRead = DateTime.UtcNow;
         }
 
-        messageRepository.AddMessage(message);
+        uow.MessageRepository.AddMessage(message);
 
-        if (await messageRepository.SaveAllAsync())
+        if (await uow.Complete())
         {
             await Clients.Group(groupName).SendAsync("NewMessage", message.ToDto());
             // for notifications of new messages if user is on different tab
@@ -73,25 +72,25 @@ public class MessageHub(IMessageRepository messageRepository, IMemberRepository 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         // manually remove connection from db
-        await messageRepository.RemoveConnection(Context.ConnectionId);
+        await uow.MessageRepository.RemoveConnection(Context.ConnectionId);
         // when a user disconnects from signalR hub and they are inside the group, then they're automatically removed from the group
         await base.OnDisconnectedAsync(exception);
     }
 
     private async Task<bool> AddToGroup(string groupName)
     {
-        var group = await messageRepository.GetMessageGroup(groupName);
+        var group = await uow.MessageRepository.GetMessageGroup(groupName);
         var connection = new Connection(Context.ConnectionId, GetUserId());
 
         if (group == null)
         {
             group = new Group(groupName);
-            messageRepository.AddGroup(group);
+            uow.MessageRepository.AddGroup(group);
         }
 
         group.Connections.Add(connection);
 
-        return await messageRepository.SaveAllAsync();
+        return await uow.Complete();
     }
 
     private static string GetGroupName(string? caller, string? other)
