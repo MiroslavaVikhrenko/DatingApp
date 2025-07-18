@@ -21,6 +21,9 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
     {
         base.OnModelCreating(modelBuilder);
 
+        // return only approved photos
+        modelBuilder.Entity<Photo>().HasQueryFilter(x => x.IsApproved);
+
         modelBuilder.Entity<IdentityRole>()
             .HasData(
                 new IdentityRole { Id = "member-id", Name = "Member", NormalizedName = "MEMBER" },
