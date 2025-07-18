@@ -2,6 +2,7 @@ using System;
 using API.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -13,7 +14,8 @@ public class AppDbContext(DbContextOptions options) : IdentityDbContext<AppUser>
     public DbSet<Photo> Photos { get; set; }
     public DbSet<MemberLike> Likes { get; set; }
     public DbSet<Message> Messages { get; set; }
-
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<Connection> Connections { get; set; }
     // to deal with UTC dates
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

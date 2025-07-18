@@ -51,7 +51,7 @@
               <img
                 class="rounded-full"
                 src="{{
-                  isInbox ? message.senderImageUrl : message.recipientImageUrl
+                  isInbox ? message.senderImageUrl || '/user.png' : message.recipientImageUrl || '/user.png' 
                 }}"
                 alt="image of member"
               />
