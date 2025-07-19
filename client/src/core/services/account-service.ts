@@ -71,7 +71,7 @@ export class AccountService {
             this.logout();
           },
         });
-    }, 5 * 60 * 1000); // 5 min
+    }, 14 * 24 * 60 * 60 * 1000); // 14 days | BAD | for free sql server
   }
 
   setCurrentUser(user: User) {
