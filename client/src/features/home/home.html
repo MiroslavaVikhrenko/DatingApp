@@ -20,7 +20,9 @@
       <p class="pb-6 text-xl">From fearless heroes to misunderstood villains.</p>
       <p class="pb-6 text-xl">For a chance at happily ever after (or at least a really fun date).</p>
       <div class="flex items-center gap-3">
-        <button (click)="showRegister(true)" class="btn btn-primary btn-lg">Register</button>
+        @if (!accountService.currentUser()) {
+          <button (click)="showRegister(true)" class="btn btn-primary btn-lg">Register</button>
+        }
         <!-- <button class="btn btn-info btn-lg">Learn more</button> -->
       </div>
     </div>
