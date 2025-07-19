@@ -18,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
-    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddCors();
 //scoped to http request => created when http request comes in and disposed when it's complete
@@ -101,11 +101,15 @@ app.UseCors(x => x
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseDefaultFiles(); // look inside wwwroot folder
+app.UseStaticFiles(); // this allows to serve the content
+
 app.MapControllers();
 
 // Provide middleware for SignalR => requests come into signalR to be forwarded to presence hub
 app.MapHub<PresenceHub>("hubs/presence");
 app.MapHub<MessageHub>("hubs/messages");
+app.MapFallbackToController("Index", "Fallback");
 
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
